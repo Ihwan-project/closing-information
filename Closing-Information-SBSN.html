@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Closing Information Lelang SBSN &mdash; Pengirim Telegram</title>
+<style>
+  :root{
+    --bg:#0f1720; --panel:#161f2b; --panel2:#1d2836; --line:#2b3a4d;
+    --ink:#e8eef6; --muted:#93a4b8; --accent:#3b82f6; --accent2:#1d4ed8;
+    --ok:#22c55e; --warn:#f59e0b; --err:#ef4444;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font-family:"Segoe UI",Inter,system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.5}
+  header{background:linear-gradient(135deg,#12263f,#0f1720);border-bottom:1px solid var(--line);padding:18px 24px}
+  header h1{margin:0;font-size:19px;letter-spacing:.2px}
+  header p{margin:4px 0 0;color:var(--muted);font-size:12.5px}
+  .wrap{max-width:1180px;margin:0 auto;padding:20px 24px 80px}
+  /* stepper */
+  .steps{display:flex;gap:6px;margin:18px 0 22px;flex-wrap:wrap}
+  .step{flex:1 1 150px;background:var(--panel);border:1px solid var(--line);border-radius:9px;
+        padding:9px 12px;font-size:12.5px;color:var(--muted);display:flex;gap:9px;align-items:center}
+  .step .n{width:21px;height:21px;border-radius:50%;background:#243349;color:var(--muted);
+           display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;flex:none}
+  .step.active{border-color:var(--accent);color:var(--ink);background:#16273f}
+  .step.active .n{background:var(--accent);color:#fff}
+  .step.done .n{background:var(--ok);color:#04240f}
+  .step.done{color:#cfe6d6}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}
+  .card h2{margin:0 0 4px;font-size:15px}
+  .card .sub{color:var(--muted);font-size:12.5px;margin-bottom:14px}
+  .hide{display:none !important}
+  /* drop zone */
+  #drop{border:2px dashed var(--line);border-radius:12px;padding:34px;text-align:center;cursor:pointer;
+        transition:.15s;background:var(--panel2)}
+  #drop:hover,#drop.over{border-color:var(--accent);background:#16273f}
+  #drop .big{font-size:15px;font-weight:600}
+  #drop .sm{color:var(--muted);font-size:12.5px;margin-top:6px}
+  /* form bits */
+  label.f{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:600;letter-spacing:.2px}
+  input[type=text],input[type=number],input[type=password],textarea,select{
+    width:100%;background:#0e1620;border:1px solid var(--line);color:var(--ink);
+    border-radius:7px;padding:8px 10px;font-size:13.5px;font-family:inherit}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent)}
+  textarea{resize:vertical;font-family:"Consolas",ui-monospace,monospace;font-size:12.5px;line-height:1.55}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .row>div{flex:1 1 190px}
+  button{background:var(--accent);color:#fff;border:0;border-radius:7px;padding:9px 16px;
+         font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit}
+  button:hover{background:var(--accent2)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+  button.ghost:hover{background:var(--panel2);border-color:var(--accent)}
+  button.danger{background:#7f1d1d}
+  button.danger:hover{background:#991b1b}
+  button.ok{background:var(--ok);color:#04240f}
+  button.sm{padding:4px 9px;font-size:12px}
+  .bar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:14px}
+  .spacer{flex:1}
+  /* table */
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+  th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  tbody tr:hover{background:#1a2534}
+  .code{font-weight:700}
+  .tin{width:64px;padding:4px 6px !important;font-size:12.5px;text-align:center}
+  .mini{color:var(--muted);font-size:11px}
+  /* recipients */
+  .rcp{display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--line);
+       border-radius:8px;margin-bottom:7px;background:var(--panel2)}
+  .rcp .nm{font-weight:600}
+  .rcp .id{color:var(--muted);font-size:11.5px;font-family:ui-monospace,monospace}
+  .pill{font-size:10.5px;padding:2px 7px;border-radius:99px;background:#243349;color:var(--muted)}
+  .pill.g{background:#14361f;color:#86efac}
+  .st{font-size:12px;font-weight:600}
+  .st.ok{color:var(--ok)} .st.err{color:var(--err)} .st.wait{color:var(--warn)}
+  .note{background:#16273f;border:1px solid #274262;border-radius:8px;padding:11px 13px;
+        font-size:12.5px;color:#c6dcf5;margin-bottom:14px}
+  .note.warn{background:#3a2a10;border-color:#6b4a12;color:#fcd9a1}
+  .note.err{background:#3a1414;border-color:#7f1d1d;color:#fecaca}
+  .note b{color:#fff}
+  .prev{background:#0b1119;border:1px solid var(--line);border-radius:9px;padding:14px 16px;
+        white-space:pre-wrap;font-family:"Consolas",ui-monospace,monospace;font-size:12.5px;line-height:1.6;
+        max-height:460px;overflow:auto}
+  details summary{cursor:pointer;color:var(--muted);font-size:12.5px;padding:4px 0}
+  .kv{display:flex;gap:22px;flex-wrap:wrap;margin:10px 0 2px}
+  .kv div{font-size:12.5px}
+  .kv b{display:block;font-size:16px;margin-top:2px}
+  .drag{cursor:grab;color:var(--muted);user-select:none}
+</style>
+</head>
+<body>
+<header>
+  <h1>Closing Information Lelang SBSN</h1>
+  <p>Baca PDF Auction Closing Information &rarr; susun laporan &rarr; kirim ke Telegram</p>
+</header>
+
+<div class="wrap">
+
+  <div class="steps">
+    <div class="step" id="s1"><span class="n">1</span> Upload PDF</div>
+    <div class="step" id="s2"><span class="n">2</span> Periksa data</div>
+    <div class="step" id="s3"><span class="n">3</span> Penerima Telegram</div>
+    <div class="step" id="s4"><span class="n">4</span> Kirim pesan</div>
+    <div class="step" id="s5"><span class="n">5</span> Konfirmasi &amp; bersihkan</div>
+  </div>
+
+  <!-- ============ STEP 1 : UPLOAD ============ -->
+  <div class="card" id="card1">
+    <h2>1 &middot; Upload file Auction Closing Information</h2>
+    <div class="sub">File PDF hasil unduhan sistem lelang (SBN Instrument). Data dibaca langsung di browser Anda &mdash; tidak dikirim ke server manapun.</div>
+    <div id="drop">
+      <div class="big">Klik untuk memilih file, atau seret file PDF ke sini</div>
+      <div class="sm">Contoh: AUCTION CLOSING INFORMATION _SBN_ 2026-06-30 110527.pdf</div>
+    </div>
+    <input type="file" id="file" accept="application/pdf,.pdf" style="display:none">
+    <div id="upStatus" style="margin-top:12px"></div>
+  </div>
+
+  <!-- ============ STEP 2 : REVIEW ============ -->
+  <div class="card hide" id="card2">
+    <h2>2 &middot; Periksa &amp; lengkapi data</h2>
+    <div class="sub">Angka diambil otomatis dari PDF. Lengkapi nomor lelang dan pastikan tenor sudah benar.</div>
+
+    <div class="row" style="margin-bottom:14px">
+      <div style="flex:0 0 150px">
+        <label class="f">Nomor lelang</label>
+        <input type="text" id="fNo" placeholder="14">
+      </div>
+      <div style="flex:0 0 210px">
+        <label class="f">Tanggal lelang (judul)</label>
+        <input type="text" id="fTgl" placeholder="30 Juni 2026">
+      </div>
+      <div style="flex:0 0 210px">
+        <label class="f">Judul baris pertama</label>
+        <input type="text" id="fJudul" value="CLOSING INFORMATION LELANG">
+      </div>
+    </div>
+
+    <div id="parseWarn"></div>
+
+    <table id="tbl">
+      <thead>
+        <tr>
+          <th style="width:26px"></th>
+          <th style="width:34px">Urut</th>
+          <th>Seri</th>
+          <th style="width:120px">Tenor (tahun)</th>
+          <th class="num">Incoming</th>
+          <th class="num">Com</th>
+          <th class="num">Non-com</th>
+          <th class="num">Lowest</th>
+          <th class="num">Highest</th>
+          <th style="width:30px"></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+
+    <div class="kv">
+      <div>Total Incoming Bid <b id="kTotal">&ndash;</b></div>
+      <div>Jumlah seri <b id="kSeri">&ndash;</b></div>
+      <div>Tanggal setelmen <b id="kVd">&ndash;</b></div>
+    </div>
+
+    <div class="bar">
+      <button class="ghost" onclick="resetOrder()">Urutkan ulang otomatis</button>
+      <div class="spacer"></div>
+      <button class="ghost" onclick="goStep(1)">Kembali</button>
+      <button onclick="goStep(3)">Lanjut ke penerima &rarr;</button>
+    </div>
+  </div>
+
+  <!-- ============ STEP 3 : RECIPIENTS ============ -->
+  <div class="card hide" id="card3">
+    <h2>3 &middot; Daftar penerima Telegram</h2>
+    <div class="sub">Token bot dan daftar penerima tersimpan permanen di browser ini, jadi cukup diisi sekali.</div>
+
+    <div class="note" id="setupNote">
+      <b>Cara menyiapkan (sekali saja):</b><br>
+      1. Buka Telegram &rarr; chat <b>&#64;BotFather</b> &rarr; kirim <b>/newbot</b> &rarr; salin token yang diberikan ke kolom di bawah.<br>
+      2. Minta setiap pegawai penerima membuka bot tersebut dan menekan <b>Start</b> (atau kirim satu pesan apa saja).
+      Untuk grup: masukkan bot ke grup, lalu kirim satu pesan di grup.<br>
+      3. Tekan tombol <b>Deteksi penerima baru</b> &mdash; Chat ID akan terisi sendiri. Tidak perlu tahu nomor HP.
+    </div>
+
+    <div class="row" style="margin-bottom:12px">
+      <div style="flex:2 1 330px">
+        <label class="f">Token bot</label>
+        <input type="password" id="fToken" placeholder="123456789:AAH...">
+      </div>
+      <div style="flex:0 0 auto;display:flex;align-items:flex-end;gap:8px">
+        <button class="ghost" onclick="toggleToken()" id="btnEye">Tampilkan</button>
+        <button class="ghost" onclick="cekBot()">Cek koneksi bot</button>
+      </div>
+    </div>
+    <div id="botInfo" style="margin-bottom:12px"></div>
+
+    <div class="bar" style="margin-top:0;margin-bottom:12px">
+      <button onclick="deteksiPenerima()">Deteksi penerima baru</button>
+      <button class="ghost" onclick="diagnosa()">Lihat semua Chat ID</button>
+      <button class="ghost" onclick="tambahManual()">Tambah Chat ID manual</button>
+    </div>
+    <div id="detStatus"></div>
+    <div id="diagnosa"></div>
+
+    <div id="rcpList"></div>
+
+    <div class="bar">
+      <div class="spacer"></div>
+      <button class="ghost" onclick="goStep(2)">Kembali</button>
+      <button onclick="goStep(4)">Lanjut ke pengiriman &rarr;</button>
+    </div>
+  </div>
+
+  <!-- ============ STEP 4 : SEND ============ -->
+  <div class="card hide" id="card4">
+    <h2>4 &middot; Pratinjau &amp; kirim</h2>
+    <div class="sub">Periksa sekali lagi isi pesan. Anda masih boleh menyunting teks di bawah sebelum dikirim.</div>
+
+    <label class="f">Isi pesan yang akan dikirim</label>
+    <textarea id="msg" rows="20"></textarea>
+    <div class="bar" style="margin-bottom:4px">
+      <button class="ghost sm" onclick="rebuildMsg()">Susun ulang dari data</button>
+      <button class="ghost sm" onclick="salinPesan()">Salin teks</button>
+      <span class="mini" id="msgLen"></span>
+    </div>
+
+    <div style="margin-top:14px">
+      <label class="f">Akan dikirim ke</label>
+      <div id="sendList"></div>
+    </div>
+
+    <div id="sendWarn"></div>
+
+    <div class="bar">
+      <div class="spacer"></div>
+      <button class="ghost" onclick="goStep(3)">Kembali</button>
+      <button id="btnSend" onclick="kirimSemua()">Kirim sekarang</button>
+    </div>
+  </div>
+
+  <!-- ============ STEP 5 : CONFIRM ============ -->
+  <div class="card hide" id="card5">
+    <h2>5 &middot; Konfirmasi pengiriman</h2>
+    <div class="sub">Status di bawah adalah balasan resmi dari server Telegram untuk setiap penerima.</div>
+    <div id="hasilKirim"></div>
+    <div id="ringkas" class="kv"></div>
+
+    <div class="bar">
+      <button class="ghost" onclick="ulangGagal()" id="btnRetry">Kirim ulang yang gagal</button>
+      <div class="spacer"></div>
+      <button class="danger" onclick="bersihkan()">Konfirmasi selesai &amp; bersihkan file</button>
+    </div>
+  </div>
+
+  <details style="margin-top:8px">
+    <summary>Riwayat pengiriman terakhir</summary>
+    <div id="riwayat" style="margin-top:8px"></div>
+  </details>
+
+</div>
+
+<script>
+"use strict";
+/* ================= konfigurasi tersimpan ================= */
+const LS = {
+  get(k,d){ try{ const v=localStorage.getItem('ciSbsn.'+k); return v?JSON.parse(v):d; }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem('ciSbsn.'+k, JSON.stringify(v)); }catch(e){} }
+};
+let recipients = LS.get('recipients', []);      // {id,name,type,active}
+let tenorOverride = LS.get('tenor', {});        // {PBS030: 2}
+let riwayat = LS.get('riwayat', []);
+let lastNo = LS.get('lastNo', 0);
+
+/* ================= state sesi ================= */
+let items = [];            // hasil parsing
+let hasil = [];            // hasil kirim
+let fileName = '';
+
+const BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const EN = {january:0,february:1,march:2,april:3,may:4,june:5,july:6,august:7,september:8,october:9,november:10,december:11};
+
+/* ================= util angka ================= */
+function toNum(s){ return parseFloat(String(s).replace(/\./g,'').replace(',','.')); }
+function fmtID(v,dec){
+  return v.toLocaleString('id-ID',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+}
+/* Rp1.310 miliar / Rp24.881,3 miliar  -> 1 desimal, dibuang bila nol */
+function rp(v){
+  const r = Math.round(v*10)/10;
+  return 'Rp' + (Math.abs(r-Math.round(r))<1e-9 ? fmtID(Math.round(r),0) : fmtID(r,1)) + ' miliar';
+}
+function pct(v){ return fmtID(v,5) + '%'; }
+function tglID(d){ return d.getDate()+' '+BULAN[d.getMonth()]+' '+d.getFullYear(); }
+
+/* ================= PARSER PDF ================= */
+const RE_RATE  = /(\d+[.,]\d{4,6})\s*[-–—]\s*(\d+[.,]\d{4,6})/;
+const RE_DATE  = /(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})/gi;
+const RE_AMT   = /\d{1,3}(?:\.\d{3})*,\d{1,2}(?![\d.,])/g;
+const RE_DAYS  = /(\d[\d.]*)\s*Days?/i;
+/* Pola kode seri SBSN.
+   PBS[A-Z]?###  -> PBS030, PBSK002, PBSG002 (green sukuk), dan varian huruf lain
+   SPNS/SPN + 8 digit (DDMMYYYY); panjang dikunci 8 supaya penggalan kode yang
+   terpotong lebar kolom (mis. "SPNS0302202") tidak ikut tertangkap.
+   Bila ada jenis seri baru, cukup tambahkan polanya di baris ini. */
+const RE_CODE  = /\b(SPNSNT\d{8}|SPNS\d{8}|SPN\d{8}|PBS[A-Z]{0,2}\d{3}|SR[A-Z]?\d{3}|SNI[A-Z]?\d{3}|SDHI\d{3}|IFR\d{4}|FR\d{4})\b/;
+const RE_SPLIT_BILL = /^(SPNSNT|SPNS|SPN)(\d{1,8})$/;
+const RE_TOKEN = /[A-Za-z]+\d*|\d+/g;
+const RE_TOTAL_ROW = /\b(grand\s+total|total\s+keseluruhan|jumlah)\b/i;
+
+function cariKodeSeri(block){
+  let m = block.match(RE_CODE);
+  if(m) return m[1];
+
+  /* Kode SPNS yang terpotong lebar kolom: sambung kembali penggalan angkanya.
+     Penyambungan hanya dilakukan bila hasilnya TIDAK MERAGUKAN, yaitu tepat satu
+     potongan angka di sekitarnya yang melengkapi panjang kode menjadi 8 digit.
+     Bila ada lebih dari satu kemungkinan, kode sengaja dianggap tidak terbaca
+     supaya petugas memeriksanya sendiri -- lebih aman daripada menebak. */
+  const tokens = block.match(RE_TOKEN) || [];
+  for(let i=0;i<tokens.length;i++){
+    const mm = tokens[i].match(RE_SPLIT_BILL);
+    if(!mm) continue;
+    const kurang = 8 - mm[2].length;
+    if(kurang<=0) continue;
+    const kandidat = [...new Set(tokens.slice(i+1,i+9)
+                      .filter(t=>/^\d+$/.test(t) && t.length===kurang))];
+    if(kandidat.length===1) return mm[1]+mm[2]+kandidat[0];
+  }
+
+  // Kode yang tercetak berspasi, misalnya "PBS 030" atau "PBSG 002".
+  const rapat = block.replace(/\b(SPNSNT|SPNS|SPN|PBS[A-Z]{0,2}|SR|SNI|SDHI|IFR|FR)\s+(?=\d)/g,'$1');
+  m = rapat.match(RE_CODE);
+  return m? m[1] : null;
+}
+
+/* ---- pembaca PDF bawaan (tanpa pustaka luar, bekerja tanpa internet) ---- */
+function latin1(u8){
+  let s='', CH=8192;
+  for(let i=0;i<u8.length;i+=CH) s += String.fromCharCode.apply(null,u8.subarray(i,i+CH));
+  return s;
+}
+async function inflate(u8){
+  for(const fmt of ['deflate','deflate-raw']){
+    try{
+      const st = new Blob([u8]).stream().pipeThrough(new DecompressionStream(fmt));
+      return new Uint8Array(await new Response(st).arrayBuffer());
+    }catch(e){ /* coba format berikutnya */ }
+  }
+  return null;
+}
+function decodeStr(s){
+  return s.replace(/\\(\r\n|\n|\r)/g,'')
+          .replace(/\\([0-7]{1,3})/g,(m,o)=>String.fromCharCode(parseInt(o,8)))
+          .replace(/\\(.)/g,(m,c)=>({n:'\n',r:'\r',t:'\t',b:'\b',f:'\f'}[c]||c));
+}
+function hexStr(h){
+  h = h.replace(/\s+/g,''); if(h.length%2) h+='0';
+  let o=''; for(let i=0;i<h.length;i+=2) o+=String.fromCharCode(parseInt(h.substr(i,2),16));
+  return o;
+}
+function tokenize(s){
+  const t=[]; let i=0, n=s.length;
+  while(i<n){
+    const c=s[i];
+    if(c==='('){
+      let d=1,j=i+1,buf='';
+      while(j<n&&d>0){
+        const ch=s[j];
+        if(ch==='\\'){ buf+=ch+(s[j+1]||''); j+=2; continue; }
+        if(ch==='('){d++;} else if(ch===')'){d--; if(!d){j++;break;}}
+        buf+=ch; j++;
+      }
+      t.push({k:'s',v:decodeStr(buf)}); i=j; continue;
+    }
+    if(c==='<'&&s[i+1]!=='<'){ const j=s.indexOf('>',i); if(j<0) break;
+      t.push({k:'s',v:hexStr(s.slice(i+1,j))}); i=j+1; continue; }
+    if(c==='<'||c==='>'){ i+=2; continue; }
+    if(c==='['||c===']'){ t.push({k:'o',v:c}); i++; continue; }
+    if(c===' '||c==='\n'||c==='\r'||c==='\t'||c==='\f'||c==='\0'){ i++; continue; }
+    if(c==='%'){ while(i<n&&s[i]!=='\n')i++; continue; }
+    if(c==='/'){ let j=i+1; while(j<n&&!/[\s\/\[\]<>(){}%]/.test(s[j]))j++; t.push({k:'n',v:s.slice(i+1,j)}); i=j; continue; }
+    if(/[-+.\d]/.test(c)){ let j=i+1; while(j<n&&/[-+.\d eE]/.test(s[j])&&/[-+.\d]/.test(s[j]))j++;
+      t.push({k:'#',v:parseFloat(s.slice(i,j))||0}); i=j; continue; }
+    let j=i; while(j<n&&/[A-Za-z*'"0-9]/.test(s[j]))j++;
+    if(j===i)j=i+1;
+    t.push({k:'o',v:s.slice(i,j)}); i=j;
+  }
+  return t;
+}
+/* jalankan operator teks -> kumpulan {x,y,s} */
+function runContent(txt, sink){
+  const tk = tokenize(txt);
+  let st=[], x=0,y=0, lx=0,ly=0, lead=0, arr=null;
+  const show = s=>{ if(s && s.trim()) sink({x:x,y:y,s:s}); };
+  for(const t of tk){
+    if(t.k!=='o'){ if(arr) arr.push(t); else st.push(t); continue; }
+    switch(t.v){
+      case '[': arr=[]; break;
+      case ']': {
+        if(arr){ let b=''; arr.forEach(e=>{ if(e.k==='s') b+=e.v; else if(e.k==='#'&&e.v<-120) b+=' '; });
+                 st.push({k:'s',v:b}); arr=null; }
+        break; }
+      case 'BT': x=y=lx=ly=0; st=[]; break;
+      case 'ET': st=[]; break;
+      case 'Tm': { const a=st.slice(-6).map(o=>o.v);
+        if(a.length===6){ lx=x=a[4]; ly=y=a[5]; } st=[]; break; }
+      case 'Td': { const a=st.slice(-2).map(o=>o.v);
+        if(a.length===2){ lx+=a[0]; ly+=a[1]; x=lx; y=ly; } st=[]; break; }
+      case 'TD': { const a=st.slice(-2).map(o=>o.v);
+        if(a.length===2){ lead=-a[1]; lx+=a[0]; ly+=a[1]; x=lx; y=ly; } st=[]; break; }
+      case 'TL': { const a=st.slice(-1)[0]; if(a) lead=a.v; st=[]; break; }
+      case 'T*': ly-=lead; x=lx; y=ly; st=[]; break;
+      case 'Tj': { const a=st.slice(-1)[0]; if(a&&a.k==='s') show(a.v); st=[]; break; }
+      case 'TJ': { const a=st.slice(-1)[0]; if(a&&a.k==='s') show(a.v); st=[]; break; }
+      case "'": { ly-=lead; x=lx; y=ly; const a=st.slice(-1)[0]; if(a&&a.k==='s') show(a.v); st=[]; break; }
+      case '"': { ly-=lead; x=lx; y=ly; const a=st.slice(-1)[0]; if(a&&a.k==='s') show(a.v); st=[]; break; }
+      default: st=[];
+    }
+    if(st.length>40) st=st.slice(-12);
+  }
+}
+/* ambil seluruh content stream halaman lalu susun jadi baris teks */
+async function pdfToLines(arrayBuffer){
+  const u8 = new Uint8Array(arrayBuffer);
+  const raw = latin1(u8);
+  if(raw.slice(0,5)!=='%PDF-') throw new Error('File ini bukan PDF yang sah.');
+  if(/\/Encrypt\b/.test(raw)) throw new Error('PDF terproteksi sandi (encrypted) sehingga tidak bisa dibaca.');
+
+  const pages = [];           // tiap elemen: array {x,y,s}
+  let i = 0;
+  while(true){
+    let k = raw.indexOf('stream', i);
+    if(k<0) break;
+    if(raw.substr(k-3,3)==='end'){ i=k+6; continue; }
+    const dict = raw.slice(Math.max(0,k-400), k);
+    let p = k+6;
+    if(raw[p]==='\r') p++;
+    if(raw[p]==='\n') p++;
+    const e = raw.indexOf('endstream', p);
+    if(e<0) break;
+    i = e+9;
+    let end = e;
+    while(end>p && (raw[end-1]==='\n'||raw[end-1]==='\r')) end--;
+    if(/\/Image|\/DCTDecode|\/ObjStm|\/XRef|\/JPXDecode|\/CCITT/.test(dict)) continue;
+
+    let data = u8.subarray(p,end);
+    if(/FlateDecode/.test(dict)){
+      const inf = await inflate(data);
+      if(!inf) continue;
+      data = inf;
+    }
+    const txt = latin1(data);
+    if(!/T[jJ]|'|"/.test(txt)) continue;
+    const glyphs = [];
+    try{ runContent(txt, g=>glyphs.push(g)); }catch(err){ continue; }
+    if(glyphs.length) pages.push(glyphs);
+  }
+  if(!pages.length) throw new Error('Tidak ada teks yang bisa diambil. Kemungkinan PDF ini hasil pindai (gambar) — gunakan file asli hasil unduhan sistem lelang.');
+
+  const lines = [];
+  pages.forEach(gl=>{
+    const buckets = [];
+    gl.forEach(g=>{
+      let b = buckets.find(b=>Math.abs(b.y-g.y)<3.2);
+      if(!b){ b={y:g.y,parts:[]}; buckets.push(b); }
+      b.parts.push(g);
+    });
+    buckets.sort((a,b)=>b.y-a.y);
+    buckets.forEach(b=>{
+      b.parts.sort((a,c)=>a.x-c.x);
+      const s = b.parts.map(p=>p.s).join(' ').replace(/\s+/g,' ').trim();
+      if(s) lines.push(s);
+    });
+  });
+  return lines;
+}
+
+async function parsePdf(arrayBuffer){
+  const lines = await pdfToLines(arrayBuffer);
+
+  // baris yang memuat rentang yield = baris utama tiap seri
+  const anchors = [];
+  lines.forEach((l,i)=>{ if(RE_RATE.test(l) && RE_DAYS.test(l)) anchors.push(i); });
+
+  const out = [], warn = [];
+  anchors.forEach((start,k)=>{
+    const end   = (k+1<anchors.length) ? anchors[k+1] : lines.length;
+    const main  = lines[start];
+    const block = lines.slice(start,end).join(' ');
+
+    const mRate = main.match(RE_RATE);
+    const low   = parseFloat(mRate[1].replace(',','.'));
+    const high  = parseFloat(mRate[2].replace(',','.'));
+
+    // kode seri: bentuk lengkap ada di kolom Auction Name
+    const code = cariKodeSeri(block);
+    if(!code){
+      if(RE_TOTAL_ROW.test(main)) return;        // baris rekapitulasi, memang bukan seri
+      warn.push('Baris ini <b>dilewati</b> karena kode serinya belum dikenali, sehingga '+
+                'nominalnya <b>tidak ikut terhitung</b> pada Total Incoming Bid:<br>'+
+                '<span style="font-family:monospace;font-size:11.5px">'+esc(main.slice(0,110))+'&hellip;</span>');
+      return;
+    }
+
+    // tenure (hari)
+    const days = parseInt((main.match(RE_DAYS)||[0,'0'])[1].replace(/\./g,''),10);
+
+    // tanggal: [0]=tanggal lelang, [1]=value date
+    RE_DATE.lastIndex = 0;
+    const dates = [];
+    let m; while((m = RE_DATE.exec(main))!==null){
+      dates.push(new Date(parseInt(m[3]),EN[m[2].toLowerCase()],parseInt(m[1])));
+    }
+    const auctionDate = dates[0]||null;
+    const valueDate   = dates[1]||dates[0]||null;
+    const maturity    = (valueDate && days) ? new Date(valueDate.getTime()+days*864e5) : null;
+
+    // nominal: ambil 3 angka terakhir SEBELUM rentang yield -> com, non-com, total
+    const pre = main.slice(0, main.indexOf(mRate[0]));
+    const amts = (pre.match(RE_AMT)||[]).map(toNum);
+    if(amts.length<3){ warn.push('Nominal seri '+code+' tidak lengkap terbaca &mdash; mohon periksa manual.'); }
+    const t3 = amts.slice(-3);
+    const com = t3[0]||0, non = t3[1]||0;
+    let total = (t3[2]!==undefined) ? t3[2] : (com+non);
+    if(Math.abs(com+non-total) > 0.6){
+      warn.push('Seri <b>'+code+'</b>: Com + Non-com ('+fmtID(com+non,2)+') tidak sama dengan Total ('+fmtID(total,2)+'). Mohon dicek pada PDF.');
+    }
+
+    const isBill = /^SPN/.test(code);
+    const tahun  = (days? Math.round(days/365.25) : 0);
+
+    out.push({
+      code:code, isBill:isBill, days:days,
+      auctionDate:auctionDate, valueDate:valueDate, maturity:maturity,
+      com:com, non:non, total:total, low:low, high:high,
+      tenor: (tenorOverride[code]!==undefined ? tenorOverride[code] : (isBill? '' : tahun)),
+      show: true
+    });
+  });
+
+  return {rows:out, warn:[...new Set(warn)]};
+}
+
+/* urutan baku: SPNS dulu (jatuh tempo menaik), lalu PBS (jatuh tempo menaik) */
+function sortDefault(a){
+  return a.slice().sort((x,y)=>{
+    if(x.isBill!==y.isBill) return x.isBill? -1: 1;
+    const mx = x.maturity? x.maturity.getTime(): 0, my = y.maturity? y.maturity.getTime(): 0;
+    return mx-my;
+  });
+}
+
+/* ================= PENYUSUN TEKS LAPORAN ================= */
+function buildMessage(){
+  const no    = (document.getElementById('fNo').value||'').trim();
+  const tgl   = (document.getElementById('fTgl').value||'').trim();
+  const judul = (document.getElementById('fJudul').value||'CLOSING INFORMATION LELANG').trim();
+  const dipakai = items.filter(i=>i.show);
+  const total = dipakai.reduce((s,i)=>s+i.total,0);
+
+  let t = judul + (no? ' #'+no : '') + '\n\n';
+  t += 'Lelang SBSN ' + tgl + '\n';
+  t += 'Total Incoming Bid: ' + rp(total) + '\n\n';
+
+  dipakai.forEach(i=>{
+    const tn = (i.tenor!=='' && i.tenor!==null && !isNaN(i.tenor) && Number(i.tenor)>0)
+               ? ' (' + i.tenor + ' tahun)' : '';
+    t += i.code + tn + '\n';
+    t += 'Incoming: ' + rp(i.total) + '\n';
+    t += '- Com: ' + rp(i.com) + '\n';
+    t += '- Non-com: ' + rp(i.non) + '\n';
+    t += 'Lowest Yield: ' + pct(i.low) + '\n';
+    t += 'Highest Yield: ' + pct(i.high) + '\n\n';
+  });
+  return t.trimEnd() + '\n';
+}
+
+/* ================= UI : LANGKAH ================= */
+let step = 1;
+function goStep(n){
+  if(n===3 && !items.length){ return; }
+  if(n===4){ rebuildMsg(); renderSendList(); }
+  step = n;
+  for(let i=1;i<=5;i++){
+    document.getElementById('card'+i).classList.toggle('hide', i!==n);
+    const s = document.getElementById('s'+i);
+    s.classList.toggle('active', i===n);
+    s.classList.toggle('done', i<n);
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ================= UI : UPLOAD ================= */
+const drop = document.getElementById('drop');
+const fileInp = document.getElementById('file');
+drop.onclick = ()=>fileInp.click();
+drop.ondragover = e=>{e.preventDefault(); drop.classList.add('over');};
+drop.ondragleave = ()=>drop.classList.remove('over');
+drop.ondrop = e=>{
+  e.preventDefault(); drop.classList.remove('over');
+  if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+};
+fileInp.onchange = e=>{ if(e.target.files[0]) handleFile(e.target.files[0]); };
+
+async function handleFile(f){
+  const st = document.getElementById('upStatus');
+  if(!/\.pdf$/i.test(f.name)){ st.innerHTML = '<div class="note err">File harus berformat PDF.</div>'; return; }
+  st.innerHTML = '<div class="note">Membaca <b>'+esc(f.name)+'</b> &hellip;</div>';
+  try{
+    const buf = await f.arrayBuffer();
+    const res = await parsePdf(buf);
+    if(!res.rows.length){
+      st.innerHTML = '<div class="note err">Tidak ada baris seri yang terbaca dari PDF ini. Pastikan file adalah <b>Auction Closing Information &ndash; SBN Instrument</b> hasil unduhan sistem (bukan hasil pindai/scan).</div>';
+      return;
+    }
+    fileName = f.name;
+    items = sortDefault(res.rows);
+    st.innerHTML = '<div class="note"><b>'+res.rows.length+' seri</b> terbaca dari '+esc(f.name)+'.</div>';
+
+    // prasetel nomor lelang & tanggal
+    const ad = items.find(i=>i.auctionDate);
+    document.getElementById('fTgl').value = ad? tglID(ad.auctionDate) : '';
+    document.getElementById('fNo').value = lastNo? String(lastNo+1) : '';
+
+    const pw = document.getElementById('parseWarn');
+    pw.innerHTML = res.warn.length
+      ? '<div class="note warn"><b>Perlu diperiksa:</b><br>'+res.warn.join('<br>')+'</div>' : '';
+
+    renderTable();
+    goStep(2);
+  }catch(err){
+    st.innerHTML = '<div class="note err">Gagal membaca PDF: '+esc(err.message)+'</div>';
+  }
+}
+
+/* ================= UI : TABEL DATA ================= */
+function renderTable(){
+  const tb = document.getElementById('tbody');
+  tb.innerHTML = '';
+  items.forEach((it,idx)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td><input type="checkbox" '+(it.show?'checked':'')+' onchange="toggleShow('+idx+',this.checked)" title="Sertakan dalam laporan"></td>'+
+      '<td class="mini">'+(idx+1)+'</td>'+
+      '<td><span class="code">'+it.code+'</span>'+
+        '<div class="mini">'+(it.maturity? 'JT '+tglID(it.maturity): '')+' &middot; '+it.days+' hari</div></td>'+
+      '<td>'+(it.isBill
+          ? '<span class="mini">&mdash;</span>'
+          : '<input class="tin" type="number" min="0" step="1" value="'+it.tenor+'" onchange="setTenor('+idx+',this.value)">')+'</td>'+
+      '<td class="num">'+fmtID(it.total,2)+'</td>'+
+      '<td class="num">'+fmtID(it.com,2)+'</td>'+
+      '<td class="num">'+fmtID(it.non,2)+'</td>'+
+      '<td class="num">'+fmtID(it.low,5)+'</td>'+
+      '<td class="num">'+fmtID(it.high,5)+'</td>'+
+      '<td><button class="ghost sm" onclick="move('+idx+',-1)" title="Naik">&uarr;</button>'+
+          '<button class="ghost sm" onclick="move('+idx+',1)" title="Turun">&darr;</button></td>';
+    tb.appendChild(tr);
+  });
+  const dipakai = items.filter(i=>i.show);
+  document.getElementById('kTotal').textContent = rp(dipakai.reduce((s,i)=>s+i.total,0));
+  document.getElementById('kSeri').textContent  = dipakai.length + ' seri';
+  const vd = items.find(i=>i.valueDate);
+  document.getElementById('kVd').textContent = vd? tglID(vd.valueDate) : '-';
+}
+function toggleShow(i,v){ items[i].show=v; renderTable(); }
+function setTenor(i,v){
+  items[i].tenor = v===''? '' : parseInt(v,10);
+  tenorOverride[items[i].code] = items[i].tenor; LS.set('tenor',tenorOverride);
+}
+function move(i,d){
+  const j=i+d; if(j<0||j>=items.length) return;
+  const t=items[i]; items[i]=items[j]; items[j]=t; renderTable();
+}
+function resetOrder(){ items = sortDefault(items); renderTable(); }
+
+/* ================= TELEGRAM ================= */
+const fToken = document.getElementById('fToken');
+fToken.value = LS.get('token','');
+fToken.oninput = ()=>LS.set('token', fToken.value.trim());
+function toggleToken(){
+  const on = fToken.type==='password';
+  fToken.type = on? 'text':'password';
+  document.getElementById('btnEye').textContent = on? 'Sembunyikan':'Tampilkan';
+}
+function tokenOK(){
+  const t = fToken.value.trim();
+  return /^\d{6,}:[\w-]{20,}$/.test(t) ? t : null;
+}
+async function tg(method, params){
+  const t = fToken.value.trim();
+  if(!t) throw new Error('Token bot belum diisi.');
+  const r = await fetch('https://api.telegram.org/bot'+t+'/'+method,{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(params||{})
+  });
+  const j = await r.json();
+  if(!j.ok) throw new Error(j.description || ('HTTP '+r.status));
+  return j.result;
+}
+async function cekBot(){
+  const el = document.getElementById('botInfo');
+  el.innerHTML = '<div class="note">Menghubungi Telegram &hellip;</div>';
+  try{
+    const me = await tg('getMe');
+    el.innerHTML = '<div class="note">Terhubung ke bot <b>&#64;'+esc(me.username)+'</b> ('+esc(me.first_name)+').</div>';
+  }catch(e){ el.innerHTML = errNote(e); }
+}
+function errNote(e){
+  let extra = '';
+  if(/Failed to fetch|NetworkError|load failed/i.test(e.message))
+    extra = '<br><span class="mini">Periksa koneksi internet. Bila kantor memblokir api.telegram.org, pengiriman otomatis tidak bisa dilakukan &mdash; gunakan tombol <b>Salin teks</b> pada langkah 4 lalu tempel manual di Telegram.</span>';
+  if(/unauthorized/i.test(e.message))
+    extra = '<br><span class="mini">Token bot salah atau sudah dicabut. Ambil ulang dari &#64;BotFather.</span>';
+  if(/terminated by other getUpdates|webhook/i.test(e.message))
+    extra = '<br><span class="mini">Bot ini sedang dipakai aplikasi lain atau memakai webhook.</span>';
+  return '<div class="note err">Gagal: '+esc(e.message)+extra+'</div>';
+}
+
+async function deteksiPenerima(){
+  const st = document.getElementById('detStatus');
+  st.innerHTML = '<div class="note">Mencari chat yang menghubungi bot &hellip;</div>';
+  try{
+    const ups = await tg('getUpdates',{timeout:0,limit:100});
+    let baru = 0, total = 0;
+    ups.forEach(u=>{
+      const m = u.message||u.edited_message||u.channel_post||u.my_chat_member;
+      if(!m||!m.chat) return;
+      const c = m.chat; total++;
+      if(recipients.some(r=>String(r.id)===String(c.id))) return;
+      const nama = c.title || [c.first_name,c.last_name].filter(Boolean).join(' ') || ('@'+(c.username||c.id));
+      recipients.push({id:String(c.id), name:nama, type:c.type, active:true});
+      baru++;
+    });
+    LS.set('recipients',recipients); renderRcp();
+    st.innerHTML = baru
+      ? '<div class="note"><b>'+baru+' penerima baru</b> ditambahkan.</div>'
+      : '<div class="note warn">Tidak ada penerima baru. Pastikan setiap pegawai sudah menekan <b>Start</b> di bot (atau mengirim satu pesan) dalam 24 jam terakhir, lalu coba lagi.</div>';
+  }catch(e){ st.innerHTML = errNote(e); }
+}
+/* ---------- daftar semua Chat ID (langsung dari server Telegram) ---------- */
+let chatDitemukan = [];
+async function diagnosa(){
+  const el=document.getElementById('diagnosa');
+  el.innerHTML='<div class="note">Membaca daftar chat dari server Telegram &hellip;</div>';
+  try{
+    const wh = await tg('getWebhookInfo');
+    const ups = await tg('getUpdates',{timeout:0,limit:100});
+    const known = new Set(recipients.map(r=>String(r.id)));
+    const peta = {};
+    (ups||[]).forEach(u=>{
+      const m = u.message||u.edited_message||u.channel_post||u.my_chat_member;
+      const c = m && m.chat; if(!c) return;
+      const id = String(c.id), waktu = m.date||0;
+      if(peta[id] && waktu <= peta[id].waktuUnix) return;
+      peta[id] = {id:id, waktuUnix:waktu, tipe:c.type||'private', username:c.username||'',
+        nama: c.title || [c.first_name,c.last_name].filter(Boolean).join(' ') || ('@'+(c.username||id)),
+        waktu: waktu? new Date(waktu*1000).toLocaleString('id-ID',{dateStyle:'short',timeStyle:'short'}) : '-',
+        sudahAda: known.has(id)};
+    });
+    chatDitemukan = Object.values(peta).sort((a,b)=>b.waktuUnix-a.waktuUnix);
+
+    let h='';
+    if(wh && wh.url){
+      h+='<div class="note warn"><b>Webhook sedang aktif</b> ('+esc(wh.url)+'). '+
+         'Selama webhook menyala, daftar chat tidak dapat dibaca karena pesan langsung '+
+         'dialihkan ke alamat tersebut. '+
+         '<button class="ghost sm" onclick="hapusWebhook()">Matikan webhook</button></div>';
+    }
+    if(!chatDitemukan.length){
+      h+='<div class="note warn">Belum ada satu pun chat yang tercatat. Penyebab tersering: '+
+         'pegawai belum menekan <b>Start</b> di bot, atau pesannya dikirim lebih dari '+
+         '24 jam lalu sehingga sudah dihapus Telegram. Minta mereka mengirim satu pesan '+
+         'lagi, lalu tekan tombol ini kembali.</div>';
+    }else{
+      h+='<div class="note">Ditemukan <b>'+chatDitemukan.length+' chat</b> dari '+(ups||[]).length+
+         ' pesan yang tersimpan di server Telegram. Angka pada kolom Chat ID inilah yang '+
+         'dipakai untuk mengirim pesan.</div>'+
+         '<table><thead><tr><th>Nama</th><th>Chat ID</th><th>Jenis</th>'+
+         '<th>Pesan terakhir</th><th></th></tr></thead><tbody>'+
+        chatDitemukan.map((c,i)=>'<tr><td>'+esc(c.nama)+((c.username && c.nama.indexOf('@')!==0)? ' <span class="mini">@'+esc(c.username)+'</span>':'')+
+          '</td><td style="font-family:ui-monospace;font-weight:600">'+esc(c.id)+'</td>'+
+          '<td><span class="pill'+(/group|channel/.test(c.tipe)?' g':'')+'">'+esc(c.tipe)+'</span></td>'+
+          '<td class="mini">'+esc(c.waktu)+'</td><td>'+
+          (c.sudahAda? '<span class="mini">sudah terdaftar</span>'
+                     : '<button class="ghost sm" onclick="tambahChat('+i+')">Tambahkan</button>')+
+          '</td></tr>').join('')+'</tbody></table>'+
+         '<div class="mini" style="margin-top:8px">Angka positif = chat pribadi &middot; '+
+         'negatif = grup &middot; diawali -100 = supergroup atau channel.</div>';
+    }
+    el.innerHTML=h;
+  }catch(e){ el.innerHTML = errNote(e); }
+}
+async function hapusWebhook(){
+  try{ await tg('deleteWebhook',{drop_pending_updates:false}); diagnosa(); }
+  catch(e){ document.getElementById('diagnosa').innerHTML = errNote(e); }
+}
+function tambahChat(i){
+  const c = chatDitemukan[i];
+  if(recipients.some(r=>String(r.id)===c.id)) return;
+  recipients.push({id:c.id, name:c.nama, type:c.tipe, active:true});
+  LS.set('recipients',recipients); renderRcp(); c.sudahAda=true; diagnosa();
+}
+
+function tambahManual(){
+  const raw = prompt('Masukkan Chat ID (angka, diawali - untuk grup, atau @namachannel):');
+  if(!raw) return;
+  const id = raw.trim();
+  if(!/^-?\d+$/.test(id) && !/^@[\w]{4,}$/.test(id)){
+    alert('Chat ID tidak sah.\nContoh yang benar: 123456789, -1001234567890, atau @namachannel.');
+    return;
+  }
+  if(recipients.some(r=>r.id===id)){ alert('Chat ID sudah ada dalam daftar.'); return; }
+  const nm = prompt('Nama penerima:') || id;
+  recipients.push({id:id, name:nm.trim()||id, type:'manual', active:true});
+  LS.set('recipients',recipients); renderRcp();
+}
+function renderRcp(){
+  const el = document.getElementById('rcpList');
+  if(!recipients.length){
+    el.innerHTML = '<div class="note warn">Belum ada penerima. Gunakan <b>Deteksi penerima baru</b> setelah pegawai menekan Start di bot.</div>';
+    return;
+  }
+  el.innerHTML = recipients.map((r,i)=>
+    '<div class="rcp">'+
+      '<input type="checkbox" '+(r.active?'checked':'')+' onchange="rcpToggle('+i+',this.checked)">'+
+      '<div style="flex:1">'+
+        '<div class="nm">'+esc(r.name)+' <span class="pill'+(r.type==='group'||r.type==='supergroup'?' g':'')+'">'+esc(r.type||'private')+'</span></div>'+
+        '<div class="id">Chat ID: '+esc(r.id)+'</div>'+
+      '</div>'+
+      '<button class="ghost sm" onclick="rcpRename('+i+')">Ubah nama</button>'+
+      '<button class="ghost sm" onclick="rcpTest('+i+')">Tes</button>'+
+      '<button class="danger sm" onclick="rcpDel('+i+')">Hapus</button>'+
+    '</div>').join('');
+}
+function rcpToggle(i,v){ recipients[i].active=v; LS.set('recipients',recipients); }
+function rcpRename(i){
+  const n = prompt('Nama penerima:', recipients[i].name);
+  if(n){ recipients[i].name=n; LS.set('recipients',recipients); renderRcp(); }
+}
+function rcpDel(i){
+  if(!confirm('Hapus '+recipients[i].name+' dari daftar penerima?')) return;
+  recipients.splice(i,1); LS.set('recipients',recipients); renderRcp();
+}
+async function rcpTest(i){
+  const st = document.getElementById('detStatus');
+  try{
+    await tg('sendMessage',{chat_id:recipients[i].id, text:'Tes koneksi dari aplikasi Closing Information SBSN.'});
+    st.innerHTML = '<div class="note">Pesan tes terkirim ke <b>'+esc(recipients[i].name)+'</b>.</div>';
+  }catch(e){ st.innerHTML = errNote(e); }
+}
+
+/* ================= LANGKAH 4 : KIRIM ================= */
+function rebuildMsg(){
+  const t = buildMessage();
+  document.getElementById('msg').value = t;
+  document.getElementById('msgLen').textContent = t.length + ' karakter' + (t.length>4096? ' — melebihi batas 4096, pesan akan dipecah otomatis':'');
+}
+document.getElementById('msg').addEventListener('input',e=>{
+  const n=e.target.value.length;
+  document.getElementById('msgLen').textContent = n+' karakter'+(n>4096?' — melebihi batas 4096, pesan akan dipecah otomatis':'');
+});
+function salinPesan(){
+  const ta=document.getElementById('msg'); ta.select(); document.execCommand('copy');
+  ta.setSelectionRange(0,0);
+  document.getElementById('msgLen').textContent = 'Teks disalin ke clipboard.';
+}
+function renderSendList(){
+  const aktif = recipients.filter(r=>r.active);
+  document.getElementById('sendList').innerHTML = aktif.length
+    ? aktif.map(r=>'<div class="rcp"><div style="flex:1"><div class="nm">'+esc(r.name)+'</div><div class="id">'+esc(r.id)+'</div></div></div>').join('')
+    : '<div class="note warn">Tidak ada penerima aktif yang dipilih.</div>';
+  document.getElementById('btnSend').disabled = !aktif.length;
+  document.getElementById('sendWarn').innerHTML = '';
+}
+function potong(t){
+  if(t.length<=4096) return [t];
+  const out=[]; let sisa=t;
+  while(sisa.length>4096){
+    let cut = sisa.lastIndexOf('\n\n',4000); if(cut<1000) cut=4000;
+    out.push(sisa.slice(0,cut)); sisa = sisa.slice(cut).replace(/^\n+/,'');
+  }
+  if(sisa) out.push(sisa);
+  return out;
+}
+async function kirimSemua(){
+  const btn = document.getElementById('btnSend');
+  const teks = document.getElementById('msg').value;
+  const aktif = recipients.filter(r=>r.active);
+  if(!aktif.length) return;
+  if(!confirm('Kirim laporan ke '+aktif.length+' penerima?')) return;
+  btn.disabled = true; btn.textContent = 'Mengirim…';
+  hasil = aktif.map(r=>({id:r.id,name:r.name,status:'wait',info:''}));
+  goStep(5); renderHasil();
+  const parts = potong(teks);
+  for(let i=0;i<hasil.length;i++){
+    try{
+      let ids=[];
+      for(const p of parts){
+        const res = await tg('sendMessage',{chat_id:hasil[i].id, text:p, disable_web_page_preview:true});
+        ids.push(res.message_id);
+        if(parts.length>1) await new Promise(r=>setTimeout(r,350));
+      }
+      hasil[i].status='ok'; hasil[i].info='message_id '+ids.join(', ');
+    }catch(e){
+      hasil[i].status='err'; hasil[i].info=e.message;
+    }
+    renderHasil();
+    await new Promise(r=>setTimeout(r,400));   // jaga rate limit Telegram
+  }
+  btn.disabled = false; btn.textContent = 'Kirim sekarang';
+  simpanRiwayat();
+}
+async function ulangGagal(){
+  const teks = document.getElementById('msg').value;
+  const parts = potong(teks);
+  for(let i=0;i<hasil.length;i++){
+    if(hasil[i].status!=='err') continue;
+    hasil[i].status='wait'; renderHasil();
+    try{
+      let ids=[];
+      for(const p of parts){
+        const res = await tg('sendMessage',{chat_id:hasil[i].id, text:p, disable_web_page_preview:true});
+        ids.push(res.message_id);
+      }
+      hasil[i].status='ok'; hasil[i].info='message_id '+ids.join(', ');
+    }catch(e){ hasil[i].status='err'; hasil[i].info=e.message; }
+    renderHasil(); await new Promise(r=>setTimeout(r,400));
+  }
+  simpanRiwayat();
+}
+function renderHasil(){
+  const ic = {ok:'&#10003; Terkirim', err:'&#10007; Gagal', wait:'&#8230; Mengirim'};
+  document.getElementById('hasilKirim').innerHTML = hasil.map(h=>
+    '<div class="rcp"><div style="flex:1"><div class="nm">'+esc(h.name)+'</div>'+
+    '<div class="id">'+esc(h.id)+(h.info? ' &middot; '+esc(h.info):'')+'</div></div>'+
+    '<span class="st '+h.status+'">'+ic[h.status]+'</span></div>').join('');
+  const ok = hasil.filter(h=>h.status==='ok').length;
+  const er = hasil.filter(h=>h.status==='err').length;
+  document.getElementById('ringkas').innerHTML =
+    '<div>Berhasil <b style="color:var(--ok)">'+ok+'</b></div>'+
+    '<div>Gagal <b style="color:'+(er?'var(--err)':'var(--muted)')+'">'+er+'</b></div>'+
+    '<div>Total penerima <b>'+hasil.length+'</b></div>';
+  document.getElementById('btnRetry').disabled = !er;
+}
+function simpanRiwayat(){
+  const no = (document.getElementById('fNo').value||'').trim();
+  riwayat.unshift({
+    waktu: new Date().toLocaleString('id-ID'),
+    lelang: no, file: fileName,
+    ok: hasil.filter(h=>h.status==='ok').length,
+    err: hasil.filter(h=>h.status==='err').length
+  });
+  riwayat = riwayat.slice(0,20); LS.set('riwayat',riwayat);
+  if(no && !isNaN(parseInt(no,10))){ lastNo = parseInt(no,10); LS.set('lastNo',lastNo); }
+  renderRiwayat();
+}
+function renderRiwayat(){
+  document.getElementById('riwayat').innerHTML = riwayat.length
+    ? '<table><thead><tr><th>Waktu</th><th>Lelang</th><th>File</th><th class="num">Berhasil</th><th class="num">Gagal</th></tr></thead><tbody>'+
+      riwayat.map(r=>'<tr><td>'+esc(r.waktu)+'</td><td>#'+esc(r.lelang)+'</td><td class="mini">'+esc(r.file)+'</td>'+
+      '<td class="num">'+r.ok+'</td><td class="num">'+r.err+'</td></tr>').join('')+'</tbody></table>'
+    : '<div class="mini">Belum ada riwayat.</div>';
+}
+
+/* ================= LANGKAH 5 : BERSIHKAN ================= */
+function bersihkan(){
+  const er = hasil.filter(h=>h.status==='err').length;
+  if(er && !confirm('Masih ada '+er+' penerima yang gagal. Tetap bersihkan file?')) return;
+  if(!confirm('Bersihkan file dan data lelang ini? Token bot dan daftar penerima tetap tersimpan.')) return;
+  items=[]; hasil=[]; fileName='';
+  fileInp.value='';
+  document.getElementById('upStatus').innerHTML = '<div class="note">File dan data lelang sebelumnya sudah dibersihkan. Siap untuk lelang berikutnya.</div>';
+  document.getElementById('tbody').innerHTML='';
+  document.getElementById('parseWarn').innerHTML='';
+  document.getElementById('msg').value='';
+  document.getElementById('hasilKirim').innerHTML='';
+  document.getElementById('ringkas').innerHTML='';
+  document.getElementById('fNo').value='';
+  document.getElementById('fTgl').value='';
+  goStep(1);
+}
+
+/* ================= misc ================= */
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+renderRcp(); renderRiwayat(); goStep(1);
+window.__parsePdf = parsePdf; window.__buildMessage = buildMessage;   // untuk pengujian
+window.__pdfToLines = pdfToLines;
+window.__setItems = a=>{ items=sortDefault(a); renderTable(); };
+</script>
+</body>
+</html>
